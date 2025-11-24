@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The Wall Company - Quotation Calculators</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    /* CSS will be added in next step */
+    body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f0f0f0; }
+    .hidden { display: none; }
+    .page { min-height: 100vh; padding: 20px; max-width: 1200px; margin: 0 auto; }
+    .back { position: absolute; top: 20px; left: 20px; background: #007bff; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; }
+    .cards { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; }
+    .card { background: white; border-radius: 20px; padding: 40px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.1); cursor: pointer; transition: transform 0.3s; width: 300px; }
+    .card:hover { transform: scale(1.05); }
+    .icon { font-size: 4em; margin-bottom: 20px; }
+    .form { max-width: 500px; margin: 50px auto; background: white; padding: 40px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+    label { display: block; margin: 20px 0; }
+    input, textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
+    button { background: #28a745; color: white; border: none; padding: 15px 30px; border-radius: 5px; cursor: pointer; font-size: 16px; margin: 10px 5px; }
+    #result { font-size: 24px; font-weight: bold; color: #007bff; margin: 20px 0; }
+    @media (max-width: 768px) { .cards { flex-direction: column; align-items: center; } .card { width: 90%; } }
+
+    input[type="number"]::-webkit-outer-spin-button,
+    input[type="number"]::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    input[type="number"] {
+      -moz-appearance: textfield;
+    }
+  </style>
+</head>
+<body>
+
+  <section id="main" class="page">
+    <div style="text-align: center; margin-bottom: 50px;">
+      <h1 style="font-size: 3em; color: #333;">The Wall Company</h1>
+      <p style="font-size: 1.5em; color: #666;">Select a calculator to get your quotation</p>
+    </div>
+    <div class="cards">
+      <div class="card" data-page="paver">
+        <div class="icon">🧱</div>
+        <h2>Paver Blocks</h2>
+        <p>Calculate cost for floor paver blocks</p>
+      </div>
+      <div class="card" data-page="walls">
+        <div class="icon">🧱</div>
+        <h2>Walls</h2>
+        <p>Calculate cost for walls</p>
+      </div>
+      <div class="card" data-page="tiles">
+        <div class="icon">🔲</div>
+        <h2>Floor Tiles</h2>
+        <p>Calculate cost for floor tiles</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="paver" class="page hidden">
+    <button class="back" onclick="showMain()">← Back to Menu</button>
+    <div class="form">
+      <h1>Paver Blocks Calculator</h1>
+      <div style="display: flex; gap: 20px; justify-content: space-around; margin: 20px 0; flex-wrap: wrap;">
+        <div style="flex: 1; min-width: 200px; padding: 15px; border: 2px solid #ddd; border-radius: 8px; text-align: center; background: #f9f9f9;">
+          <label style="display: block; font-weight: bold; font-size: 1.1em; margin-bottom: 10px; color: #333;">Number of Pieces</label>
+          <!-- <input type="radio" name="paver-unit" value="pieces" id="radio-pieces" checked style="display: block; margin: 0 auto 10px; width: 20px; height: 20px;"> -->
+          <input type="number" id="paver-pieces" step="1" min="0" style="width: 80%; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
+        </div>
+        <div style="flex: 1; min-width: 200px; padding: 15px; border: 2px solid #ddd; border-radius: 8px; text-align: center; background: #f9f9f9;">
+          <label style="display: block; font-weight: bold; font-size: 1.1em; margin-bottom: 10px; color: #333;">Square Feet</label>
+          <!-- <input type="radio" name="paver-unit" value="sqft" id="radio-sqft" style="display: block; margin: 0 auto 10px; width: 20px; height: 20px;"> -->
+          <input type="number" id="paver-sqft" step="0.01" min="0" style="width: 80%; padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
+        </div>
+      </div>
+      <label style="margin-top: 20px;">Price per sq ft (₹): <input type="number" id="paver-price" value="20" style="width: 150px;"></label>
+      <label>Total Area (sq ft): <input type="number" id="paver-area" step="0.01" readonly style="background: #f0f0f0;"></label>
+      <button onclick="calculate('paver')">Calculate</button>
+      <div id="paver-result"></div>
+      <button onclick="showCustomer('paver')">Generate Quotation</button>
+    </div>
+  </section>
+
+  <section id="walls" class="page hidden">
+    <button class="back" onclick="showMain()">← Back to Menu</button>
+    <div class="form">
+      <h1>Walls Calculator</h1>
+      <label>Length (ft): <input type="number" id="walls-length" step="0.01" min="0"></label>
+      <label>Breadth (ft): <input type="number" id="walls-breadth" step="0.01" min="0"></label>
+      <label>Height (ft): <input type="number" id="walls-height" step="0.01" min="0" value="6"></label>
+      <label>Price per sq ft (₹): <input type="number" id="walls-price" value="100"></label>
+      <label>Total Area (sq ft): <input type="number" id="walls-area" step="0.01" readonly style="background: #f0f0f0;"></label>
+      <button onclick="calculate('walls')">Calculate</button>
+      <div id="walls-result"></div>
+      <button onclick="showCustomer('walls')">Generate Quotation</button>
+    </div>
+  </section>
+
+  <section id="tiles" class="page hidden">
+    <button class="back" onclick="showMain()">← Back to Menu</button>
+    <div class="form">
+      <h1>Floor Tiles Calculator</h1>
+      <label>Length (ft): <input type="number" id="tiles-length" step="0.01" min="0"></label>
+      <label>Breadth (ft): <input type="number" id="tiles-breadth" step="0.01" min="0"></label>
+      <label>Price per sq ft (₹): <input type="number" id="tiles-price" value="20"></label>
+      <label>Total Area (sq ft): <input type="number" id="tiles-area" step="0.01" readonly style="background: #f0f0f0;"></label>
+      <button onclick="calculate('tiles')">Calculate</button>
+      <div id="tiles-result"></div>
+      <button onclick="showCustomer('tiles')">Generate Quotation</button>
+    </div>
+  </section>
+
+  <section id="customer" class="page hidden">
+    <button class="back" onclick="showCalcBack()">← Back</button>
+    <div class="form">
+      <h1>Customer Details for Quotation</h1>
+      <label>Customer Name: <input type="text" id="cust-name"></label>
+      <label>Customer Address: <textarea id="cust-addr" rows="3"></textarea></label>
+      <label>Site/Project Address: <textarea id="site-addr" rows="3"></textarea></label>
+      <button onclick="generatePDF()">Generate PDF Quotation</button>
+    </div>
+  </section>
+
+  <script>
+    let currentItem = '';
+    let currentResult = null;
+
+    const PRICES = {
+      paver: 20,
+      walls: 100,
+      tiles: 20
+    };
+
+    const PAVER = {
+      widthIn: 9.5,
+      lengthIn: 5
+    };
+    const SQ_IN_PER_SQFT = 144;
+
+    const COMPANY = {
+      name: 'The Wall Company',
+      address: 'Lower Bagdogra, Darjeeling, West Bengal - 734014',
+      phone: '+91 74780 55541',
+      email: 'thewallcompanygroup@gmail.com'
+    };
+
+    function hideAll() {
+      document.querySelectorAll('.page').forEach(page => page.classList.add('hidden'));
+    }
+
+    function showPage(id) {
+      hideAll();
+      document.getElementById(id).classList.remove('hidden');
+    }
+
+    function showMain() {
+      showPage('main');
+    }
+
+    function init() {
+      document.querySelectorAll('.card').forEach(card => {
+        card.addEventListener('click', () => {
+          showPage(card.dataset.page);
+        });
+      });
+      // Set prices from constants
+
+      document.getElementById('paver-price').value = PRICES.paver;
+      document.getElementById('walls-price').value = PRICES.walls;
+      document.getElementById('tiles-price').value = PRICES.tiles;
+      document.getElementById('paver-pieces').addEventListener('input', function() {
+        const sqftPerBlock = (PAVER.widthIn * PAVER.lengthIn) / SQ_IN_PER_SQFT;
+        const pieces = parseFloat(this.value) || 0;
+        document.getElementById('paver-sqft').value = (pieces * sqftPerBlock).toFixed(2);
+      });
+      document.getElementById('paver-sqft').addEventListener('input', function() {
+        const sqftPerBlock = (PAVER.widthIn * PAVER.lengthIn) / SQ_IN_PER_SQFT;
+        const sqft = parseFloat(this.value) || 0;
+        document.getElementById('paver-pieces').value = Math.round(sqft / sqftPerBlock);
+      });
+
+      // Realtime area updates
+      ['walls-length', 'walls-breadth', 'walls-height'].forEach(id => {
+        document.getElementById(id).addEventListener('input', updateWallsArea);
+      });
+      ['tiles-length', 'tiles-breadth'].forEach(id => {
+        document.getElementById(id).addEventListener('input', updateTilesArea);
+      });
+      ['paver-pieces', 'paver-sqft'].forEach(id => {
+        document.getElementById(id).addEventListener('input', updatePaverArea);
+      });
+
+      showPage('main');
+    }
+
+    function calculate(type) {
+      const priceId = type + '-price';
+      const resultId = type + '-result';
+      const price = parseFloat(document.getElementById(priceId).value) || 0;
+      let pieces, area;
+      if (type === 'paver') {
+        // const mode = document.querySelector('input[name="paver-unit"]:checked').value;
+        const sqftPerBlock = (PAVER.widthIn * PAVER.lengthIn) / SQ_IN_PER_SQFT;
+        // if (mode === 'pieces') {
+          pieces = parseFloat(document.getElementById('paver-pieces').value) || 0;
+          area = pieces * sqftPerBlock;
+        // } else {
+        //   area = parseFloat(document.getElementById('paver-sqft').value) || 0;
+        //   pieces = area / sqftPerBlock;
+        // }
+      } else if (type === 'walls') {
+        const length = parseFloat(document.getElementById('walls-length').value) || 0;
+        const breadth = parseFloat(document.getElementById('walls-breadth').value) || 0;
+        const height = parseFloat(document.getElementById('walls-height').value) || 0;
+        area = 2 * (length + breadth) * height;
+      } else {
+        const lenId = type + '-length';
+        const brId = type + '-breadth';
+        const len = parseFloat(document.getElementById(lenId).value) || 0;
+        const br = parseFloat(document.getElementById(brId).value) || 0;
+        area = len * br;
+      }
+      document.getElementById(type + '-area').value = area.toFixed(2);
+      const total = area * price;
+      let html;
+      if (type === 'paver') {
+        html = `
+          <div id="result">
+            Pieces: ${Math.round(pieces)}<br>
+            Area: ${area.toFixed(2)} sq ft<br>
+            Total Cost: ₹${total.toFixed(2)}
+          </div>
+        `;
+        currentResult = { type, pieces: Math.round(pieces), area: area.toFixed(2), total: total.toFixed(2), price };
+      } else {
+        html = `
+          <div id="result">
+            Area: ${area.toFixed(2)} sq ft<br>
+            Total Cost: ₹${total.toFixed(2)}
+          </div>
+        `;
+        currentResult = { type, area: area.toFixed(2), total: total.toFixed(2), price };
+      }
+      document.getElementById(resultId).innerHTML = html;
+    }
+
+    function updateWallsArea() {
+      const length = parseFloat(document.getElementById('walls-length').value) || 0;
+      const breadth = parseFloat(document.getElementById('walls-breadth').value) || 0;
+      const height = parseFloat(document.getElementById('walls-height').value) || 0;
+      const area = 2 * (length + breadth) * height;
+      document.getElementById('walls-area').value = area.toFixed(2);
+    }
+
+    function updateTilesArea() {
+      const length = parseFloat(document.getElementById('tiles-length').value) || 0;
+      const breadth = parseFloat(document.getElementById('tiles-breadth').value) || 0;
+      const area = length * breadth;
+      document.getElementById('tiles-area').value = area.toFixed(2);
+    }
+
+    function updatePaverArea() {
+      const sqft = parseFloat(document.getElementById('paver-sqft').value) || 0;
+      document.getElementById('paver-area').value = sqft.toFixed(2);
+    }
+
+    function showCustomer(type) {
+      if (!currentResult || currentResult.type !== type) {
+        alert('Please calculate the area first.');
+        return;
+      }
+      currentItem = type;
+      showPage('customer');
+    }
+
+    function showCalcBack() {
+      showPage(currentItem);
+    }
+
+    function generatePDF() {
+      const custName = document.getElementById('cust-name').value || 'Customer';
+      const custAddr = document.getElementById('cust-addr').value || '';
+      const siteAddr = document.getElementById('site-addr').value || '';
+
+      const itemNames = {
+        paver: 'Paver Blocks',
+        walls: 'Walls',
+        tiles: 'Floor Tiles'
+      };
+      const itemName = itemNames[currentItem] || currentItem;
+
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+
+      // Header
+      doc.setFontSize(22);
+      doc.text(COMPANY.name, 105, 30, { align: 'center' });
+      doc.setFontSize(16);
+      doc.text('Quotation', 105, 45, { align: 'center' });
+      doc.setFontSize(12);
+      doc.text(`Date: ${new Date().toLocaleDateString('en-IN')}`, 105, 55, { align: 'center' });
+
+      // Customer details
+      let y = 80;
+      doc.text('Bill To:', 20, y);
+      y += 8;
+      doc.setFontSize(14);
+      doc.text(custName, 20, y);
+      y += 10;
+      doc.setFontSize(12);
+      if (custAddr) {
+        const splitAddr = doc.splitTextToSize(custAddr, 170);
+        doc.text(splitAddr, 20, y);
+        y += (splitAddr.length * 6);
+      }
+      if (siteAddr) {
+        y += 5;
+        doc.text('Site / Project Address:', 20, y);
+        y += 8;
+        const splitSite = doc.splitTextToSize(siteAddr, 170);
+        doc.text(splitSite, 20, y);
+        y += (splitSite.length * 6) + 5;
+      }
+
+      // Item details
+      doc.text('Description', 20, y);
+      doc.text('Quantity', 90, y);
+      doc.text('Rate (Rs./sqft)', 130, y);
+      doc.text('Amount (Rs.)', 170, y);
+      y += 8;
+      doc.line(20, y - 3, 200, y - 3); // underline
+      y += 5;
+
+      let qtyStartY = y;
+      let centerY;
+      if ('pieces' in currentResult) {
+        doc.text(`${currentResult.pieces} Pieces`, 90, qtyStartY);
+        doc.text(`${currentResult.area} Sq. Ft.`, 90, qtyStartY + 7);
+        centerY = qtyStartY + 3.5;
+      } else {
+        doc.text(`${currentResult.area} Sq. Ft.`, 90, qtyStartY);
+        centerY = qtyStartY;
+      }
+      doc.text(itemName, 20, centerY);
+      doc.text(parseFloat(currentResult.price).toLocaleString('en-IN'), 130, centerY);
+      doc.text(parseFloat(currentResult.total).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2}), 170, centerY);
+
+      y += 15;
+      doc.line(20, y - 3, 200, y - 3);
+      y += 5;
+
+      // Total
+      doc.setFont(undefined, 'bold');
+      doc.setFontSize(16);
+      doc.text(`Total Amount: Rs. ${parseFloat(currentResult.total).toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`, 105, y, { align: 'center' });
+
+      // Footer
+      y = 260;
+      doc.setFontSize(10);
+      doc.setFont(undefined, 'normal');
+      doc.text('Company Details:', 20, y);
+      y += 6;
+      doc.text(COMPANY.address, 20, y);
+      y += 6;
+      doc.text(`Phone: ${COMPANY.phone}`, 20, y);
+      y += 6;
+      doc.text(`Email: ${COMPANY.email}`, 20, y);
+
+      doc.save(`Quotation-${itemName.replace(/ /g, '-')}-${new Date().toISOString().slice(0, 10)}.pdf`);
+    }
+
+    window.addEventListener('load', init);
+  </script>
+
+</body>
+</html>
